@@ -11,54 +11,15 @@ import torchaudio
 import torchaudio.transforms as transforms
 
 
-class LogMelSpectrogram(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.melspectrogram = transforms.MelSpectrogram(
-            sample_rate=16000,
-            n_fft=1024,
-            win_length=1024,
-            hop_length=160,
-            center=False,
-            power=1.0,
-            norm="slaney",
-            onesided=True,
-            n_mels=128,
-            mel_scale="slaney",
-        )
-
-    def forward(self, wav):
-        wav = F.pad(wav, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
-        mel = self.melspectrogram(wav)
-        logmel = torch.log(torch.clamp(mel, min=1e-5))
-        return logmel
-
 
 class MelDataset(Dataset):
     def __init__(
         self,
         root: Path,
-        segment_length: int,
-        sample_rate: int,
         train: bool = True
     ):
-        self.wavs_dir = root / "wavs"
         self.mels_dir = root / "mels"
-        self.data_dir = self.mels_dir
-
-        self.segment_length = segment_length
-        self.sample_rate = sample_rate
         self.train = train
-
-        suffix = ".wav" if not finetune else ".npy"
-        pattern = f"train/**/*{suffix}" if train else "dev/**/*{suffix}"
-
-        self.metadata = [
-            path.relative_to(self.data_dir).with_suffix("")
-            for path in self.data_dir.rglob(pattern)
-        ]
-
-        self.logmel = LogMelSpectrogram()
 
     def __len__(self):
         return len(self.metadata)

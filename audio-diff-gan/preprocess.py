@@ -7,46 +7,68 @@ from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor
 from glob import glob
 from tqdm import tqdm
+import torchaudio
+import torch.nn.functional as F
+from pathlib import Path
 
 from params import params
+from os import path, mkdir
 
 
 def transform(filename):
-  audio, sr = T.load(filename)
-  audio = torch.clamp(audio[0], -1.0, 1.0)
+    audio, sr = T.load(filename)
 
-  if params.sample_rate != sr:
-    raise ValueError(f'Invalid sample rate {sr}.')
-  mel_args = {
-      'sample_rate': sr,
-      'win_length': params.hop_samples * 4,
-      'hop_length': params.hop_samples,
-      'n_fft': params.n_fft,
-      'f_min': 20.0,
-      'f_max': sr / 2.0,
-      'n_mels': params.n_mels,
-      'power': 1.0,
-      'normalized': True,
-  }
-  mel_spec_transform = TT.MelSpectrogram(**mel_args)
+    if sr != params.sample_rate:
+        raise ValueError(
+            f"Sample rate {sr} doesn't match target of {params.sample_rate}"
+        )
 
-  with torch.no_grad():
-    spectrogram = mel_spec_transform(audio)
-    spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
-    spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
-    np.save(f'{filename}.spec.npy', spectrogram.cpu().numpy())
+    if audio.max() > 1 or audio.min() < -1:
+        raise ValueError(
+            f"Wrong audio format, samples should be between -1 and 1"
+        )
+
+    audio = torch.clamp(audio[0], -1.0, 1.0)
+
+    if audio.size(-1) < params.num_frames:
+        audio = F.pad(audio, (0, params.num_frames - audio.size(-1)))
+
+    mel_spec_transform = TT.MelSpectrogram(
+        sample_rate=params.sample_rate,
+        n_fft=params.n_fft,
+        win_length=params.win_length,
+        hop_length=params.hop_length,
+        center=params.center,
+        power=params.power,
+        norm=params.norm,
+        n_mels=params.n_mels,
+        mel_scale=params.mel_scale)
+
+    with torch.no_grad():
+        # audio = F.pad(audio, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
+
+        spectrogram = mel_spec_transform(audio)
+        spectrogram = torch.log(torch.clamp(spectrogram, min=1e-5))
+
+        # preprocessing from DiffWave
+        # spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
+        # spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
+
+        np.save(f'{params.main_dir}/mels/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
 
 
 def main():
-  # one should delete noise data and anything from 0-9 numbers
-  filenames = glob(f'{params.data_dir}/**/*.wav', recursive=True)
-  for filename in tqdm(filenames, desc='Preprocessing'):
-    transform(filename)
+    # one should delete noise data and anything from 0-9 numbers
+    filenames = []
+    for dir in params.dir_list:
+        filenames += glob(f'{path.join(params.dataset_dir, dir)}/**/*.wav', recursive=True)
+    
+    if not path.exists(params.main_dir + '/mels'):
+        mkdir(params.main_dir + '/mels')
 
+    for filename in tqdm(filenames, desc='Preprocessing'):
+        transform(Path(filename))
 
 
 if __name__ == '__main__':
-  parser = ArgumentParser(description='prepares a dataset to train DiffWave')
-  parser.add_argument('dir',
-      help='directory containing .wav files for training')
-  main(parser.parse_args())
+    main()

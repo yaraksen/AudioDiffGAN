@@ -1,2 +1,5 @@
 SC_dataset/*
 DiffWave-unconditional/exp/ch256_T200_betaT0.02/logs/checkpoint/1000000.pkl
+/audio-diff-gan/mels/
+/**/.ipynb_checkpoints/
+/**/__pycache__/
