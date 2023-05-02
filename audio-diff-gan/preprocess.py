@@ -28,7 +28,7 @@ def transform(filename):
             f"Wrong audio format, samples should be between -1 and 1"
         )
 
-    audio = torch.clamp(audio[0], -1.0, 1.0)
+    # audio = torch.clamp(audio[0], -1.0, 1.0)
 
     if audio.size(-1) < params.num_frames:
         audio = F.pad(audio, (0, params.num_frames - audio.size(-1)))
@@ -45,8 +45,7 @@ def transform(filename):
         mel_scale=params.mel_scale)
 
     with torch.no_grad():
-        # audio = F.pad(audio, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
-
+        audio = F.pad(audio, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
         spectrogram = mel_spec_transform(audio)
         spectrogram = torch.log(torch.clamp(spectrogram, min=1e-5))
 
@@ -54,7 +53,7 @@ def transform(filename):
         # spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
         # spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
 
-        np.save(f'{params.main_dir}/mels/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
+        np.save(f'{params.main_dir}/mels/{filename.parent.name}/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
 
 
 def main():
@@ -65,6 +64,10 @@ def main():
     
     if not path.exists(params.main_dir + '/mels'):
         mkdir(params.main_dir + '/mels')
+    
+    for dir in params.dir_list:
+        if not path.exists(params.main_dir + '/mels/' + dir):
+            mkdir(params.main_dir + '/mels/' + dir)
 
     for filename in tqdm(filenames, desc='Preprocessing'):
         transform(Path(filename))
