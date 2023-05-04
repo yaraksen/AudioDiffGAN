@@ -67,23 +67,23 @@ class NCSNpp(nn.Module):
     self.act = act = nn.SiLU()
     self.z_emb_dim = z_emb_dim = config.z_emb_dim
     
-    self.nf = nf = config.num_channels_dae
-    ch_mult = config.ch_mult
-    self.num_res_blocks = num_res_blocks = config.num_res_blocks
-    self.attn_resolutions = attn_resolutions = config.attn_resolutions
+    self.nf = nf = config.num_channels_dae # initial num channels in denoising model
+    ch_mult = config.ch_mult # each scale channel multiplier
+    self.num_res_blocks = num_res_blocks = config.num_res_blocks # number of resnet blocks per scale
+    self.attn_resolutions = attn_resolutions = config.attn_resolutions # resolution of applying attention
     dropout = config.dropout
-    resamp_with_conv = config.resamp_with_conv
-    self.num_resolutions = num_resolutions = len(ch_mult)
+    resamp_with_conv = config.resamp_with_conv # (true) always up/down sampling with conv
+    self.num_resolutions = num_resolutions = len(ch_mult) # num of scales
     self.all_resolutions = all_resolutions = [config.image_size // (2 ** i) for i in range(num_resolutions)]
 
-    self.conditional = conditional = config.conditional  # noise-conditional
-    fir = config.fir
+    self.conditional = conditional = config.conditional  # is noise-conditional (bool)
+    fir = config.fir # Finite impulse response
     fir_kernel = config.fir_kernel
-    self.skip_rescale = skip_rescale = config.skip_rescale
-    self.resblock_type = resblock_type = config.resblock_type.lower()
+    self.skip_rescale = skip_rescale = config.skip_rescale # (bool)
+    self.resblock_type = resblock_type = config.resblock_type.lower() # tyle of resnet block, choice in biggan and ddpm
     self.progressive = progressive = config.progressive.lower()
     self.progressive_input = progressive_input = config.progressive_input.lower()
-    self.embedding_type = embedding_type = config.embedding_type.lower()
+    self.embedding_type = embedding_type = config.embedding_type.lower() # ['positional', 'fourier']
     init_scale = 0.
     assert progressive in ['none', 'output_skip', 'residual']
     assert progressive_input in ['none', 'input_skip', 'residual']
@@ -93,20 +93,7 @@ class NCSNpp(nn.Module):
 
     modules = []
     # timestep/noise_level embedding; only for continuous training
-    if embedding_type == 'fourier':
-      # Gaussian Fourier features embeddings.
-      #assert config.training.continuous, "Fourier features are only used for continuous training."
-
-      modules.append(layerspp.GaussianFourierProjection(
-        embedding_size=nf, scale=config.fourier_scale
-      ))
-      embed_dim = 2 * nf
-
-    elif embedding_type == 'positional':
-      embed_dim = nf
-
-    else:
-      raise ValueError(f'embedding type {embedding_type} unknown.')
+    embed_dim = nf
 
     if conditional:
       modules.append(nn.Linear(embed_dim, nf * 4))

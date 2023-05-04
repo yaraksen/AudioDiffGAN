@@ -1,11 +1,3 @@
-# ---------------------------------------------------------------
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
-#
-# This work is licensed under the NVIDIA Source Code License
-# for Denoising Diffusion GAN. To view a copy of this license, see the LICENSE file.
-# ---------------------------------------------------------------
-
-
 import argparse
 import torch
 import numpy as np
@@ -16,13 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
-
-import torchvision.transforms as transforms
-from torchvision.datasets import CIFAR10
-from datasets_prep.lsun import LSUN
-from datasets_prep.stackmnist_data import StackedMNIST, _data_transforms_stacked_mnist
-from datasets_prep.lmdb_datasets import LMDBDataset
-
+from ..audio_diff_gan.dataset import MelDataset
 
 from torch.multiprocessing import Process
 import torch.distributed as dist
@@ -36,7 +22,7 @@ def broadcast_params(params):
         dist.broadcast(param.data, src=0)
 
 
-#%% Diffusion coefficients 
+# Diffusion coefficients 
 def var_func_vp(t, beta_min, beta_max):
     log_mean_coeff = -0.25 * t ** 2 * (beta_max - beta_min) - 0.5 * t * beta_min
     var = 1. - torch.exp(2. * log_mean_coeff)
@@ -122,7 +108,8 @@ def q_sample_pairs(coeff, x_start, t):
                    extract(coeff.sigmas, t+1, x_start.shape) * noise
     
     return x_t, x_t_plus_one
-#%% posterior sampling
+
+# posterior sampling
 class Posterior_Coefficients():
     def __init__(self, args, device):
         
@@ -186,7 +173,10 @@ def sample_from_model(coefficients, generator, n_time, x_init, T, opt):
         
     return x
 
-#%%
+########################################################################
+# MY CODE BELOW
+########################################################################
+
 def train(rank, gpu, args):
     from score_sde.models.discriminator import Discriminator_small, Discriminator_large
     from score_sde.models.ncsnpp_generator_adagn import NCSNpp
@@ -200,44 +190,8 @@ def train(rank, gpu, args):
     batch_size = args.batch_size
     
     nz = args.nz #latent dimension
-    
-    if args.dataset == 'cifar10':
-        dataset = CIFAR10('./data', train=True, transform=transforms.Compose([
-                        transforms.Resize(32),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
-                        transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))]), download=True)
-       
-    
-    elif args.dataset == 'stackmnist':
-        train_transform, valid_transform = _data_transforms_stacked_mnist()
-        dataset = StackedMNIST(root='./data', train=True, download=False, transform=train_transform)
-        
-    elif args.dataset == 'lsun':
-        
-        train_transform = transforms.Compose([
-                        transforms.Resize(args.image_size),
-                        transforms.CenterCrop(args.image_size),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
-                        transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
-                    ])
-
-        train_data = LSUN(root='/datasets/LSUN/', classes=['church_outdoor_train'], transform=train_transform)
-        subset = list(range(0, 120000))
-        dataset = torch.utils.data.Subset(train_data, subset)
       
-    
-    elif args.dataset == 'celeba_256':
-        train_transform = transforms.Compose([
-                transforms.Resize(args.image_size),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
-            ])
-        dataset = LMDBDataset(root='/datasets/celeba-lmdb/', name='celeba', train=True, transform=train_transform)
-      
-    
+    dataset = MelDataset(mels_dir='../audio_diff_gan/mels')
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(dataset,
                                                                     num_replicas=args.world_size,
@@ -248,17 +202,17 @@ def train(rank, gpu, args):
                                                num_workers=4,
                                                pin_memory=True,
                                                sampler=train_sampler,
-                                               drop_last = True)
+                                               drop_last=True)
     
     netG = NCSNpp(args).to(device)
     
 
-    if args.dataset == 'cifar10' or args.dataset == 'stackmnist':    
+    if args.dataset == 'cifar10' or args.dataset == 'stackmnist':
         netD = Discriminator_small(nc = 2*args.num_channels, ngf = args.ngf,
                                t_emb_dim = args.t_emb_dim,
                                act=nn.LeakyReLU(0.2)).to(device)
     else:
-        netD = Discriminator_large(nc = 2*args.num_channels, ngf = args.ngf, 
+        netD = Discriminator_large(nc = 2*args.num_channels, ngf = args.ngf,
                                    t_emb_dim = args.t_emb_dim,
                                    act=nn.LeakyReLU(0.2)).to(device)
     
@@ -266,7 +220,6 @@ def train(rank, gpu, args):
     broadcast_params(netD.parameters())
     
     optimizerD = optim.Adam(netD.parameters(), lr=args.lr_d, betas = (args.beta1, args.beta2))
-    
     optimizerG = optim.Adam(netG.parameters(), lr=args.lr_g, betas = (args.beta1, args.beta2))
     
     if args.use_ema:
@@ -274,8 +227,6 @@ def train(rank, gpu, args):
     
     schedulerG = torch.optim.lr_scheduler.CosineAnnealingLR(optimizerG, args.num_epoch, eta_min=1e-5)
     schedulerD = torch.optim.lr_scheduler.CosineAnnealingLR(optimizerD, args.num_epoch, eta_min=1e-5)
-    
-    
     
     #ddp
     netG = nn.parallel.DistributedDataParallel(netG, device_ids=[gpu])
@@ -328,10 +279,10 @@ def train(rank, gpu, args):
             
             netD.zero_grad()
             
-            #sample from p(x_0)
+            # sample from p(x_0)
             real_data = x.to(device, non_blocking=True)
             
-            #sample t
+            # sample t
             t = torch.randint(0, args.num_timesteps, (real_data.size(0),), device=device)
             
             x_t, x_tp1 = q_sample_pairs(coeff, real_data, t)
@@ -391,7 +342,7 @@ def train(rank, gpu, args):
             optimizerD.step()
             
         
-            #update G
+            # Update G
             for p in netD.parameters():
                 p.requires_grad = False
             netG.zero_grad()
@@ -404,31 +355,24 @@ def train(rank, gpu, args):
                 
             
             latent_z = torch.randn(batch_size, nz,device=device)
-            
-            
-                
            
             x_0_predict = netG(x_tp1.detach(), t, latent_z)
             x_pos_sample = sample_posterior(pos_coeff, x_0_predict, x_tp1, t)
             
             output = netD(x_pos_sample, t, x_tp1.detach()).view(-1)
                
-            
             errG = F.softplus(-output)
             errG = errG.mean()
             
             errG.backward()
             optimizerG.step()
-                
-           
             
             global_step += 1
             if iteration % 100 == 0:
                 if rank == 0:
-                    print('epoch {} iteration{}, G Loss: {}, D Loss: {}'.format(epoch,iteration, errG.item(), errD.item()))
+                    print('epoch {} iteration{}, G Loss: {}, D Loss: {}'.format(epoch, iteration, errG.item(), errD.item()))
         
         if not args.no_lr_decay:
-            
             schedulerG.step()
             schedulerD.step()
         
@@ -511,7 +455,7 @@ if __name__ == '__main__':
     parser.add_argument('--conditional', action='store_false', default=True,
                             help='noise conditional')
     parser.add_argument('--fir', action='store_false', default=True,
-                            help='FIR')
+                            help='FIR') # Finite impulse response
     parser.add_argument('--fir_kernel', default=[1, 3, 3, 1],
                             help='FIR kernel')
     parser.add_argument('--skip_rescale', action='store_false', default=True,
@@ -559,7 +503,7 @@ if __name__ == '__main__':
     parser.add_argument('--lazy_reg', type=int, default=None,
                         help='lazy regulariation.')
 
-    parser.add_argument('--save_content', action='store_true',default=False)
+    parser.add_argument('--save_content', action='store_true', default=False)
     parser.add_argument('--save_content_every', type=int, default=50, help='save content for resuming every x epochs')
     parser.add_argument('--save_ckpt_every', type=int, default=25, help='save ckpt every x epochs')
    

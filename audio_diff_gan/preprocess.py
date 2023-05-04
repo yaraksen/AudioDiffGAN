@@ -32,6 +32,11 @@ def transform(filename):
 
     if audio.size(-1) < params.num_frames:
         audio = F.pad(audio, (0, params.num_frames - audio.size(-1)))
+    
+    if audio.size(-1) > params.num_frames:
+        print('audio size is', audio.size(-1))
+        audio = audio[..., :params.num_frames]
+        print('new audio size is', audio.size(-1))
 
     mel_spec_transform = TT.MelSpectrogram(
         sample_rate=params.sample_rate,
@@ -45,29 +50,34 @@ def transform(filename):
         mel_scale=params.mel_scale)
 
     with torch.no_grad():
+        # for i in range(3):
+        #     audio = F.pad(audio, ((1024 - 160), (1024 - 160)), "reflect")
+        # audio = F.pad(audio, (86, 86), "reflect")
+
         audio = F.pad(audio, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
+
         spectrogram = mel_spec_transform(audio)
         spectrogram = torch.log(torch.clamp(spectrogram, min=1e-5))
 
-        # preprocessing from DiffWave
-        # spectrogram = 20 * torch.log10(torch.clamp(spectrogram, min=1e-5)) - 20
-        # spectrogram = torch.clamp((spectrogram + 100) / 100, 0.0, 1.0)
+        # padding audio to make mel shape (128, 128) 
+        # doubling to make it sound more realistic
+        spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
+        spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
 
-        np.save(f'{params.main_dir}/mels/{filename.parent.name}/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
+        np.save(f'{params.main_dir}/{params.mel_dir}/{filename.parent.name}/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
 
 
 def main():
-    # one should delete noise data and anything from 0-9 numbers
     filenames = []
     for dir in params.dir_list:
         filenames += glob(f'{path.join(params.dataset_dir, dir)}/**/*.wav', recursive=True)
     
-    if not path.exists(params.main_dir + '/mels'):
-        mkdir(params.main_dir + '/mels')
+    if not path.exists(path.join(params.main_dir, params.mel_dir)):
+        mkdir(path.join(params.main_dir, params.mel_dir))
     
     for dir in params.dir_list:
-        if not path.exists(params.main_dir + '/mels/' + dir):
-            mkdir(params.main_dir + '/mels/' + dir)
+        if not path.exists(path.join(params.main_dir, params.mel_dir, dir)):
+            mkdir(path.join(params.main_dir, params.mel_dir, dir))
 
     for filename in tqdm(filenames, desc='Preprocessing'):
         transform(Path(filename))

@@ -34,7 +34,8 @@ params = AttrDict(
     # datasets
     dir_list = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'],
     dataset_dir = '/home/yaoaksyonov/coursework/SC_dataset',
-    main_dir = '/home/yaoaksyonov/coursework/audio-diff-gan',
+    main_dir = '/home/yaoaksyonov/coursework/audio_diff_gan',
+    mel_dir = 'mels',
 
     audio_len = 16000
 )
