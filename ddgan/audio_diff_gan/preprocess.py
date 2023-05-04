@@ -1,13 +1,8 @@
 import numpy as np
 import torch
-import torchaudio as T
-import torchaudio.transforms as TT
 
-from argparse import ArgumentParser
-from concurrent.futures import ProcessPoolExecutor
 from glob import glob
 from tqdm import tqdm
-import torchaudio
 import torch.nn.functional as F
 from pathlib import Path
 
@@ -50,19 +45,14 @@ def transform(filename):
         mel_scale=params.mel_scale)
 
     with torch.no_grad():
-        # for i in range(3):
-        #     audio = F.pad(audio, ((1024 - 160), (1024 - 160)), "reflect")
-        # audio = F.pad(audio, (86, 86), "reflect")
-
-        audio = F.pad(audio, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
+        audio = F.pad(audio, ((1024 - 160), (1024 - 160)), "reflect")
+        audio = F.pad(audio, (1814, 1814), "constant", value=0) # padding audio to make mel shape (128, 128) 
 
         spectrogram = mel_spec_transform(audio)
         spectrogram = torch.log(torch.clamp(spectrogram, min=1e-5))
 
-        # padding audio to make mel shape (128, 128) 
-        # doubling to make it sound more realistic
-        spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
-        spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
+        # spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
+        # spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
 
         np.save(f'{params.main_dir}/{params.mel_dir}/{filename.parent.name}/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
 

@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import os
-from os import glob
+from glob import glob
 
 from torch.utils.data import Dataset
 from torchvision.datasets.vision import VisionDataset
@@ -19,16 +19,16 @@ class_to_tgt = {
     'two': 2,
     'three': 3,
     'four': 4,
-    'five':5,
-    'six':6,
-    'seven':7,
-    'eight':8,
-    'nine':9
+    'five': 5,
+    'six': 6,
+    'seven': 7,
+    'eight': 8,
+    'nine': 9
 }
 
 
 class MelDataset(VisionDataset):
-    def __init__(self, mels_dir: str, train: bool = True):
+    def __init__(self, mels_dir: str, train: bool = True, subset: int = None):
         self.train = train
         self.targets = []
         self.filenames = []
@@ -38,8 +38,13 @@ class MelDataset(VisionDataset):
             self.targets += [class_to_tgt[dir]] * len(class_filenames)
             self.filenames += class_filenames
             print(f'in {dir}: target={class_to_tgt[dir]}, len={len(class_filenames)}')
-
+        
         assert(len(self.filenames) == len(self.targets))
+
+        if subset:
+            self.filenames = self.filenames[:subset]
+            self.targets = self.targets[:subset]
+        
         print('created dataset: ', len(self.filenames))
 
     def __len__(self):

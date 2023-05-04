@@ -8,7 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
-from ..audio_diff_gan.dataset import MelDataset
+from audio_diff_gan.dataset import MelDataset
+from audio_diff_gan.tools import plot_melspecs
 
 from torch.multiprocessing import Process
 import torch.distributed as dist
@@ -186,12 +187,14 @@ def train(rank, gpu, args):
     torch.cuda.manual_seed(args.seed + rank)
     torch.cuda.manual_seed_all(args.seed + rank)
     device = torch.device('cuda:{}'.format(gpu))
+
+    print('train started, device:', device)
     
     batch_size = args.batch_size
     
     nz = args.nz #latent dimension
       
-    dataset = MelDataset(mels_dir='../audio_diff_gan/mels')
+    dataset = MelDataset(mels_dir='./audio_diff_gan/mels')
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(dataset,
                                                                     num_replicas=args.world_size,
@@ -199,12 +202,14 @@ def train(rank, gpu, args):
     data_loader = torch.utils.data.DataLoader(dataset,
                                                batch_size=batch_size,
                                                shuffle=False,
-                                               num_workers=4,
+                                               num_workers=2,
                                                pin_memory=True,
                                                sampler=train_sampler,
                                                drop_last=True)
     
     netG = NCSNpp(args).to(device)
+
+    print('net loaded')
     
 
     if args.dataset == 'cifar10' or args.dataset == 'stackmnist':
@@ -236,12 +241,16 @@ def train(rank, gpu, args):
     exp = args.exp
     parent_dir = "./saved_info/dd_gan/{}".format(args.dataset)
 
-    exp_path = os.path.join(parent_dir,exp)
+    exp_path = os.path.join(parent_dir, exp)
+    mels_path = os.path.join(exp_path, 'mel_samples')
+
     if rank == 0:
         if not os.path.exists(exp_path):
             os.makedirs(exp_path)
             copy_source(__file__, exp_path)
             shutil.copytree('score_sde/models', os.path.join(exp_path, 'score_sde/models'))
+        if not os.path.exists(mels_path):
+            os.makedirs(mels_path)
     
     
     coeff = Diffusion_Coefficients(args, device)
@@ -368,7 +377,7 @@ def train(rank, gpu, args):
             optimizerG.step()
             
             global_step += 1
-            if iteration % 100 == 0:
+            if iteration % 100 == 0: # TODO make 100
                 if rank == 0:
                     print('epoch {} iteration{}, G Loss: {}, D Loss: {}'.format(epoch, iteration, errG.item(), errD.item()))
         
@@ -377,12 +386,17 @@ def train(rank, gpu, args):
             schedulerD.step()
         
         if rank == 0:
-            if epoch % 10 == 0:
+            if epoch % 5 == 0: # TODO: make 5
                 torchvision.utils.save_image(x_pos_sample, os.path.join(exp_path, 'xpos_epoch_{}.png'.format(epoch)), normalize=True)
-            
+                plot_melspecs(x_pos_sample.detach(), tags='xpos_epoch_{}'.format(epoch), dir=mels_path)
+                np.save(os.path.join(exp_path, f'xpos_epoch_{epoch}.spec.npy'), x_pos_sample.detach().cpu().numpy())
+
             x_t_1 = torch.randn_like(real_data)
             fake_sample = sample_from_model(pos_coeff, netG, args.num_timesteps, x_t_1, T, args)
             torchvision.utils.save_image(fake_sample, os.path.join(exp_path, 'sample_discrete_epoch_{}.png'.format(epoch)), normalize=True)
+
+            np.save(os.path.join(exp_path, f'sample_discrete_epoch_{epoch}.spec.npy'), fake_sample.detach().cpu().numpy())
+            plot_melspecs(fake_sample.detach(), tags='sample_discrete_epoch_{}'.format(epoch), dir=os.path.join(exp_path, 'mel_samples'))
             
             if args.save_content:
                 if epoch % args.save_content_every == 0:
@@ -397,7 +411,7 @@ def train(rank, gpu, args):
             if epoch % args.save_ckpt_every == 0:
                 if args.use_ema:
                     optimizerG.swap_parameters_with_ema(store_params_in_ema=True)
-                    
+                
                 torch.save(netG.state_dict(), os.path.join(exp_path, 'netG_{}.pth'.format(epoch)))
                 if args.use_ema:
                     optimizerG.swap_parameters_with_ema(store_params_in_ema=True)
