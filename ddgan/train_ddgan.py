@@ -189,6 +189,7 @@ def train(rank, gpu, args):
     device = torch.device('cuda:{}'.format(gpu))
 
     print('train started, device:', device)
+    print(args.not_use_tanh)
     
     batch_size = args.batch_size
     
@@ -198,10 +199,11 @@ def train(rank, gpu, args):
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(dataset,
                                                                     num_replicas=args.world_size,
-                                                                    rank=rank)
+                                                                    rank=rank,
+                                                                    shuffle=True)
+    
     data_loader = torch.utils.data.DataLoader(dataset,
                                                batch_size=batch_size,
-                                               shuffle=False,
                                                num_workers=2,
                                                pin_memory=True,
                                                sampler=train_sampler,
@@ -377,9 +379,11 @@ def train(rank, gpu, args):
             optimizerG.step()
             
             global_step += 1
-            if iteration % 100 == 0: # TODO make 100
+            if iteration % 50 == 0: # TODO make 100
                 if rank == 0:
-                    print('epoch {} iteration{}, G Loss: {}, D Loss: {}'.format(epoch, iteration, errG.item(), errD.item()))
+                    # print('epoch {} iteration{}, G Loss: {}, D Loss: {}'.format(epoch, iteration, errG.item(), errD.item()))
+                    with open(os.path.join(exp_path, 'loss_logs.txt'), 'a') as logs_file:
+                        logs_file.write('epoch {} iteration{}, G Loss: {}, D Loss: {}\n'.format(epoch, iteration, errG.item(), errD.item()))
         
         if not args.no_lr_decay:
             schedulerG.step()
@@ -487,7 +491,7 @@ if __name__ == '__main__':
                         help='type of time embedding')
     parser.add_argument('--fourier_scale', type=float, default=16.,
                             help='scale of fourier transform')
-    parser.add_argument('--not_use_tanh', action='store_true',default=False)
+    parser.add_argument('--not_use_tanh', action='store_true', default=True)
     
     #geenrator and training
     parser.add_argument('--exp', default='experiment_cifar_default', help='name of experiment')

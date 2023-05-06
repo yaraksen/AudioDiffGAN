@@ -411,8 +411,7 @@ class NCSNpp(nn.Module):
 
     assert m_idx == len(modules)
     
-    if not self.not_use_tanh:
-
-        return torch.tanh(h)
-    else:
-        return h
+    #if not self.not_use_tanh:
+    #    return torch.tanh(h)
+    #else:
+    return h
