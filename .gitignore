@@ -8,3 +8,5 @@ model/audio_diff_gan/mels_old/
 model/saved_info
 audioldm_eval
 model/audiodiffgan_generated_ddgan_SC09_*
+/**/.DS_Store
+audio_examples/.DS_Store
