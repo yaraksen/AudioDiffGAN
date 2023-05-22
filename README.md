@@ -85,3 +85,9 @@ AudioDiffGAN - модель для быстрой необусловленной
   
 [Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/327edcbb-2d01-4733-8817-d5e86b3e5188)
 
+### Запуск
+
+Для запуска процесса обучения через bash запустить файл [audiodiffgan_train.sh](model/audiodiffgan_train.sh)
+
+Для запуска процесса генерации через bash запустить файл [audiodiffgan_test.sh](model/audiodiffgan_test.sh)
+
