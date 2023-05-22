@@ -45,7 +45,9 @@ AudioDiffGAN - модель для быстрой необусловленной
   
 [Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/9be62811-7869-48b9-81c4-0898afe986c3)
   
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/0689c428-575e-4b4b-9018-8c2ca01cd7ea) (пример плохой генерации)
+Пример плохой генерации:
+  
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/0689c428-575e-4b4b-9018-8c2ca01cd7ea)
   
 [Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/117801e8-dfaf-4c8b-8b8c-2534d58e6f46)
   
