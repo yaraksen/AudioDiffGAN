@@ -4,6 +4,8 @@ import torch
 from glob import glob
 from tqdm import tqdm
 import torch.nn.functional as F
+import torchaudio as T
+import torchaudio.transforms as TT
 from pathlib import Path
 
 from params import params
@@ -22,8 +24,6 @@ def transform(filename):
         raise ValueError(
             f"Wrong audio format, samples should be between -1 and 1"
         )
-
-    # audio = torch.clamp(audio[0], -1.0, 1.0)
 
     if audio.size(-1) < params.num_frames:
         audio = F.pad(audio, (0, params.num_frames - audio.size(-1)))
@@ -45,14 +45,12 @@ def transform(filename):
         mel_scale=params.mel_scale)
 
     with torch.no_grad():
-        audio = F.pad(audio, ((1024 - 160), (1024 - 160)), "reflect")
-        audio = F.pad(audio, (1814, 1814), "constant", value=0) # padding audio to make mel shape (128, 128) 
+        audio = F.pad(audio, ((1024 - 160) // 2, (1024 - 160) // 2), "reflect")
+        audio = F.pad(audio, (2246, 2246), "constant", value=0) # padding audio to make mel shape (128, 128)
 
         spectrogram = mel_spec_transform(audio)
+        assert(spectrogram.shape == torch.Size([1, 128, 128]))
         spectrogram = torch.log(torch.clamp(spectrogram, min=1e-5))
-
-        # spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
-        # spectrogram = torch.nn.functional.pad(spectrogram, (7, 7), "reflect")
 
         np.save(f'{params.main_dir}/{params.mel_dir}/{filename.parent.name}/{filename.stem}.spec.npy', spectrogram.cpu().numpy())
 

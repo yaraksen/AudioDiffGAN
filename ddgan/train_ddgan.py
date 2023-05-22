@@ -211,6 +211,8 @@ def train(rank, gpu, args):
     
     netG = NCSNpp(args).to(device)
 
+    print('generator:', sum(p.numel() for p in netG.parameters() if p.requires_grad))
+
     print('net loaded')
     
 
@@ -222,6 +224,7 @@ def train(rank, gpu, args):
         netD = Discriminator_large(nc = 2*args.num_channels, ngf = args.ngf,
                                    t_emb_dim = args.t_emb_dim,
                                    act=nn.LeakyReLU(0.2)).to(device)
+    print('dis:', sum(p.numel() for p in netD.parameters() if p.requires_grad))
     
     broadcast_params(netG.parameters())
     broadcast_params(netD.parameters())

@@ -7,12 +7,15 @@
 import argparse
 import torch
 import numpy as np
+from tqdm import tqdm
 
 import os
 
 import torchvision
 from score_sde.models.ncsnpp_generator_adagn import NCSNpp
 from pytorch_fid.fid_score import calculate_fid_given_paths
+from audio_diff_gan.tools import plot_melspecs
+from scipy.io.wavfile import write
 
 #%% Diffusion coefficients 
 def var_func_vp(t, beta_min, beta_max):
@@ -144,6 +147,7 @@ def sample_and_test(args):
 
     
     netG = NCSNpp(args).to(device)
+
     ckpt = torch.load('./saved_info/dd_gan/{}/{}/netG_{}.pth'.format(args.dataset, args.exp, args.epoch_id), map_location=device)
     
     #loading weights from ddp in single gpu
@@ -163,29 +167,44 @@ def sample_and_test(args):
     
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+
+    hifigan = torch.hub.load("bshall/hifigan:main", "hifigan_hubert_soft").cuda()
+
+    print('hifigan:', sum(p.numel() for p in hifigan.parameters() if p.requires_grad))
+    print('hifigan loaded')
+
+    print('gpu warmup')
+    for _ in range(10):
+        x_t_1 = torch.randn(args.batch_size, args.num_channels, args.image_size, args.image_size).to(device)
+        _ = sample_from_model(pos_coeff, netG, args.num_timesteps, x_t_1, T, args).squeeze(0)
+        wav, sr = hifigan.generate(_)
+        print(wav.size())
+    print('gpu warmup ended')
+
+    starter = torch.cuda.Event(enable_timing=True)
+    ender = torch.cuda.Event(enable_timing=True)
     
-    if args.compute_fid:
-        for i in range(iters_needed):
-            with torch.no_grad():
-                x_t_1 = torch.randn(args.batch_size, args.num_channels,args.image_size, args.image_size).to(device)
-                fake_sample = sample_from_model(pos_coeff, netG, args.num_timesteps, x_t_1,T,  args)
-                
-                fake_sample = to_range_0_1(fake_sample)
-                for j, x in enumerate(fake_sample):
-                    index = i * args.batch_size + j 
-                    torchvision.utils.save_image(x, './generated_samples/{}/{}.jpg'.format(args.dataset, index))
-                print('generating batch ', i)
-        
-        paths = [save_dir, real_img_dir]
+    os.mkdir(f'audiodiffgan_generated_{args.exp}_{args.epoch_id}')
     
-        kwargs = {'batch_size': 100, 'device': device, 'dims': 2048}
-        fid = calculate_fid_given_paths(paths=paths, **kwargs)
-        print('FID = {}'.format(fid))
-    else:
-        x_t_1 = torch.randn(args.batch_size, args.num_channels,args.image_size, args.image_size).to(device)
-        fake_sample = sample_from_model(pos_coeff, netG, args.num_timesteps, x_t_1,T,  args)
-        fake_sample = to_range_0_1(fake_sample)
-        torchvision.utils.save_image(fake_sample, './samples_{}.jpg'.format(args.dataset))
+
+    times = 0
+    for i in tqdm(range(1000)):
+        starter.record()
+        x_t_1 = torch.randn(args.batch_size, args.num_channels, args.image_size, args.image_size).to(device)
+        fake_sample = sample_from_model(pos_coeff, netG, args.num_timesteps, x_t_1, T, args).squeeze(0)
+        wav, sr = hifigan.generate(fake_sample)
+        ender.record()
+        torch.cuda.synchronize()
+        curr_time = starter.elapsed_time(ender)
+        times += curr_time
+        write(f"audiodiffgan_generated_{args.exp}_{args.epoch_id}/sample_{i}.wav", sr, wav[..., 3040:19040].squeeze(0, 1).cpu().detach().numpy())
+    
+    print('time per sample in sec.:', times / 1000 / 1000)
+    
+    # fake_sample = to_range_0_1(fake_sample)
+    # plot_melspecs(fake_sample.detach(), tags=f'sample{args.epoch_id}', dir='./')
+    # torchvision.utils.save_image(fake_sample, './samples_{}.jpg'.format(args.dataset))
+    
 
     
     
