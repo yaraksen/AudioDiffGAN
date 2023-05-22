@@ -20,17 +20,50 @@ AudioDiffGAN - модель для быстрой необусловленной
 ## Примеры генерации мел-спектрограмм
 
 ### Для модели с 2 шагами диффузии:
-После 360 шагов обучения:
+После 360 эпох обучения:
 <image src="mel_examples/mel_sample_2steps360.png" alt="2 steps 360 training steps">
-После 500 шагов обучения:
+После 500 эпох обучения:
 <image src="mel_examples/mel_sample_2steps500.png" alt="2 steps 500 training steps">
 
 ### Для модели с 4 шагами диффузии:
-После 400 шагов обучения:
+После 400 эпох обучения:
 <image src="mel_examples/mel_sample_4steps400.png" alt="4 steps 400 training steps">
-После 500 шагов обучения:
+После 500 эпох обучения:
 <image src="mel_examples/mel_sample_4steps500.png" alt="4 steps 500 training steps">
 
 ## Примеры генерации аудио
+  
+### Для модели с 2 шагами диффузии:
 
-  https://github.com/yaraksen/AudioDiffGAN/blob/main/audio_examples/2step_360/sample_0.wav
+После 360 шагов обучения:
+
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d510f4fd-c5c0-43ba-8bc3-2df33b59ac38
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d9ca3f4a-0bb6-453b-9e1d-cf5d908ab786
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/f15acdce-46da-4063-b51f-d052c19cefee
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d5e2200d-cf75-489f-b184-8327c438e37a
+  
+После 500 шагов обучения:
+
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/4cf3ab1a-6a6f-43a2-bbc2-685af341363b
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/f7ea11ff-87a7-4d87-8da1-f4a73ef826cc
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/b14eaea0-da1e-43f0-95fc-95090bc8904b
+    https://github.com/yaraksen/AudioDiffGAN/assets/26881591/47b40552-57d7-4ae4-a229-ba211d364236
+
+
+### Для модели с 4 шагами диффузии:
+  
+После 400 шагов обучения:
+
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/74086c91-c0bb-4a5b-8c8e-7609a623d9f6
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/e0607d1b-1630-406a-8eff-f7af7c47117e
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/ab937cb4-0f34-4a74-9274-2d835bb60ed8
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/e4507b0e-9e35-4d5e-a72c-dfdc928b00c5
+
+
+После 500 шагов обучения:
+
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d8d10a15-3d5b-4702-9a42-91b57a0648cb
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/cc96e0d3-55cb-4132-9b69-b1ac68fb2602
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/f44ecdcc-b9ff-42e5-a5fe-cea17841e09c
+https://github.com/yaraksen/AudioDiffGAN/assets/26881591/a7b9e664-f570-409b-966e-e1b8e0926c98
+  
