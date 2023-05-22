@@ -563,5 +563,4 @@ if __name__ == '__main__':
         print('starting in debug mode')
         
         init_processes(0, size, train, args)
-   
                 

@@ -11,9 +11,7 @@ from tqdm import tqdm
 
 import os
 
-import torchvision
 from score_sde.models.ncsnpp_generator_adagn import NCSNpp
-from pytorch_fid.fid_score import calculate_fid_given_paths
 from audio_diff_gan.tools import plot_melspecs
 from scipy.io.wavfile import write
 
@@ -281,14 +279,7 @@ if __name__ == '__main__':
     parser.add_argument('--z_emb_dim', type=int, default=256)
     parser.add_argument('--t_emb_dim', type=int, default=256)
     parser.add_argument('--batch_size', type=int, default=200, help='sample generating batch size')
-        
-
-
-
    
     args = parser.parse_args()
     
     sample_and_test(args)
-    
-   
-                

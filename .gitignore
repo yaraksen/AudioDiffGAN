@@ -1,10 +1,10 @@
 SC_dataset/*
 sc09/*
 DiffWave-unconditional/exp/ch256_T200_betaT0.02/logs/checkpoint/1000000.pkl
-ddgan/audio_diff_gan/mels/
-ddgan/audio_diff_gan/mels_old/
+model/audio_diff_gan/mels/
+model/audio_diff_gan/mels_old/
 /**/.ipynb_checkpoints/
 /**/__pycache__/
-ddgan/saved_info/*
+model/saved_info
 audioldm_eval
-ddgan/audiodiffgan_generated_ddgan_SC09_*
+model/audiodiffgan_generated_ddgan_SC09_*
