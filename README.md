@@ -32,3 +32,5 @@ AudioDiffGAN - модель для быстрой необусловленной
 <image src="mel_examples/mel_sample_4steps500.png" alt="4 steps 500 training steps">
 
 ## Примеры генерации аудио
+
+  https://github.com/yaraksen/AudioDiffGAN/blob/main/audio_examples/2step_360/sample_0.wav
