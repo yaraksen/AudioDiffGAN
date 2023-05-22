@@ -41,32 +41,31 @@ AudioDiffGAN - модель для быстрой необусловленной
 
 После 360 эпох обучения:
 
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d510f4fd-c5c0-43ba-8bc3-2df33b59ac38)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d9ca3f4a-0bb6-453b-9e1d-cf5d908ab786)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/f15acdce-46da-4063-b51f-d052c19cefee)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d5e2200d-cf75-489f-b184-8327c438e37a)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/6843ccef-8771-483f-83f3-88a2c403a241)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/9be62811-7869-48b9-81c4-0898afe986c3)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/0689c428-575e-4b4b-9018-8c2ca01cd7ea)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/117801e8-dfaf-4c8b-8b8c-2534d58e6f46)
   
 После 500 эпох обучения:
 
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/4cf3ab1a-6a6f-43a2-bbc2-685af341363b)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/f7ea11ff-87a7-4d87-8da1-f4a73ef826cc)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/b14eaea0-da1e-43f0-95fc-95090bc8904b)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/47b40552-57d7-4ae4-a229-ba211d364236)
-
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/1dfb5860-2870-4cee-b4c5-19d640fc20ac)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/47739440-1782-4db0-ad89-4d81e9137250)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/6a1ab399-f26c-41c0-975b-6c49da2598bc)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/26f4d60e-1d36-46c3-83c9-58f6ff11c913)
 
 ### Для модели с 4 шагами диффузии:
   
 После 400 эпох обучения:
 
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/74086c91-c0bb-4a5b-8c8e-7609a623d9f6)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/e0607d1b-1630-406a-8eff-f7af7c47117e)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/ab937cb4-0f34-4a74-9274-2d835bb60ed8)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/e4507b0e-9e35-4d5e-a72c-dfdc928b00c5)
-
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/a679d297-c87b-4f02-a329-f53d92a06fcf)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/0944ab1d-b72c-4654-a6c0-1b4d110543b4)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/e7310b33-3c5d-4a5f-9978-1cec18a2f305)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/b7b9265e-7538-4d05-a9d2-21fb14127762)
 
 После 500 эпох обучения:
 
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/d8d10a15-3d5b-4702-9a42-91b57a0648cb)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/cc96e0d3-55cb-4132-9b69-b1ac68fb2602)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/f44ecdcc-b9ff-42e5-a5fe-cea17841e09c)
-[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/a7b9e664-f570-409b-966e-e1b8e0926c98)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/99176a55-e9ad-41ba-bc3c-cf502bfcaee7)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/0fa4bc4b-5b3a-480b-8439-e789617f2fe1)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/94717d0c-24d1-4e95-951c-56b4e74dfa42)
+[Audio](https://github.com/yaraksen/AudioDiffGAN/assets/26881591/327edcbb-2d01-4733-8817-d5e86b3e5188)
+
