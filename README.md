@@ -19,6 +19,10 @@ AudioDiffGAN - модель для быстрой необусловленной
 ## Метрики
 <image src="images/metrics.png" alt="Метрики" width=100%>
 
+Для генерации DiffWave использовалась имплементация [отсюда](https://github.com/philsyn/DiffWave-unconditional)
+  
+Для подсчета метрик использовался [репозиторий](https://github.com/haoheliu/audioldm_eval)
+
 ## Примеры генерации мел-спектрограмм
 
 ### Для модели с 2 шагами диффузии:
